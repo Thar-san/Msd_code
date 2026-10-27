@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Sign in | Linklet</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="auth-page">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Linklet home">
+        <span class="brand-mark" aria-hidden="true">↗</span>
+        <span>linklet</span>
+      </a>
+    </header>
+    <main class="auth-shell">
+      <section class="auth-card">
+        <div class="auth-icon" aria-hidden="true">↗</div>
+        <p class="eyebrow">WELCOME BACK</p>
+        <h1>Sign in to Linklet</h1>
+        <p class="auth-description">Pick up right where you left off.</p>
+        <% if (locals.error) { %>
+        <div class="notice error-notice" role="alert"><%= error %></div>
+        <% } %>
+        <form class="auth-form" action="/user/login" method="post">
+          <label for="email">Email address</label>
+          <input id="email" type="email" required name="email" autocomplete="email" placeholder="you@example.com" />
+          <label for="password">Password</label>
+          <input id="password" type="password" required name="password" autocomplete="current-password" placeholder="Enter your password" />
+          <button class="button button-primary button-wide" type="submit">Sign in <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="auth-switch">New to Linklet? <a href="/signup">Create an account</a></p>
+      </section>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

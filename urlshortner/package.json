@@ -1,0 +1,14 @@
+{
+  "name": "urlshortner",
+  "version": "1.0.0",
+  "description": "Full-featured MERN Stack URL Shortener with Analytics & QR Codes",
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,magenta\" \"npm run server\" \"npm run client\"",
+    "server": "npm run start --prefix url",
+    "client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

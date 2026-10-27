@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <title>Dashboard | Linklet</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Linklet home">
+        <span class="brand-mark" aria-hidden="true">↗</span>
+        <span>linklet</span>
+      </a>
+      <div class="topbar-note"><span class="status-dot"></span>Your links, in one place</div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">LINK MANAGEMENT, MADE SIMPLE</p>
+          <h1>Make every link <span>count.</span></h1>
+          <p class="hero-description">Shorten a long URL, share it anywhere, and keep an eye on every click.</p>
+        </div>
+        <div class="hero-decoration" aria-hidden="true">
+          <span class="decor-link decor-link-one">↗</span>
+          <span class="decor-link decor-link-two">↗</span>
+          <span class="decor-circle"></span>
+        </div>
+      </section>
+
+      <% if (locals.created) { %>
+      <div class="notice success-notice" role="status">
+        <span class="notice-icon" aria-hidden="true">✓</span>
+        <span><%= created %></span>
+        <button class="notice-close" type="button" aria-label="Dismiss message">×</button>
+      </div>
+      <% } %>
+      <% if (locals.error) { %>
+      <div class="notice error-notice" role="alert">
+        <span><%= error %></span>
+        <button class="notice-close" type="button" aria-label="Dismiss message">×</button>
+      </div>
+      <% } %>
+
+      <section class="stats-grid" aria-label="Link summary">
+        <article class="stat-card"><span>Total links</span><strong><%= stats.total %></strong></article>
+        <article class="stat-card"><span>Active</span><strong><%= stats.active %></strong></article>
+        <article class="stat-card"><span>Expired</span><strong><%= stats.expired %></strong></article>
+        <article class="stat-card"><span>Archived</span><strong><%= stats.archived %></strong></article>
+      </section>
+
+      <section class="shorten-card" aria-labelledby="shorten-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">GET STARTED</p>
+            <h2 id="shorten-title">Shorten a URL</h2>
+          </div>
+          <span class="heading-icon" aria-hidden="true">⌁</span>
+        </div>
+        <form class="shorten-form" action="/url" method="post">
+          <label class="sr-only" for="url-input">Long URL to shorten</label>
+          <div class="input-wrap">
+            <span class="input-icon" aria-hidden="true">↗</span>
+            <input id="url-input" type="url" name="url" placeholder="Paste your long URL here (https://...)" autocomplete="url" required />
+          </div>
+          <input class="title-input" type="text" name="title" maxlength="120" placeholder="Optional title" aria-label="Optional title" />
+          <input class="date-input" type="date" name="expiresAt" aria-label="Optional expiry date" title="Optional expiry date" />
+          <button class="button button-primary" type="submit">Create short link <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="form-hint">Only http(s) destinations are accepted. Links are private to your account.</p>
+      </section>
+
+      <details class="bulk-create-panel">
+        <summary>Shorten multiple URLs</summary>
+        <p>Enter one URL per line, or use <code>Title | https://example.com</code>. Maximum 50 links per batch.</p>
+        <form action="/url/bulk" method="post">
+          <label class="sr-only" for="bulk-urls">URLs to shorten</label>
+          <textarea id="bulk-urls" name="urls" rows="5" maxlength="110000" placeholder="Company site | https://example.com&#10;https://example.org" required></textarea>
+          <button class="button button-primary" type="submit">Create batch</button>
+        </form>
+      </details>
+
+      <section class="links-section" aria-labelledby="links-title">
+        <div class="links-heading">
+          <div>
+            <p class="eyebrow">YOUR WORKSPACE</p>
+            <h2 id="links-title">Your links <span class="count-badge"><%= pagination.totalResults %></span></h2>
+          </div>
+          <p class="links-caption">Search, filter, sort, and manage your shortened URLs.</p>
+        </div>
+
+        <form class="filter-form" action="/" method="get">
+          <div class="filter-search">
+            <label class="sr-only" for="search-links">Search links</label>
+            <input id="search-links" type="search" name="q" maxlength="80" placeholder="Search title, URL, or short code" value="<%= typeof filters.q === 'string' ? filters.q : '' %>" />
+          </div>
+          <select name="status" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="active" <%= filters.status === "active" ? "selected" : "" %>>Active</option>
+            <option value="expired" <%= filters.status === "expired" ? "selected" : "" %>>Expired</option>
+            <option value="archived" <%= filters.status === "archived" ? "selected" : "" %>>Archived</option>
+          </select>
+          <select name="sort" aria-label="Sort links">
+            <option value="createdAt" <%= !filters.sort || filters.sort === "createdAt" ? "selected" : "" %>>Date created</option>
+            <option value="clickCount" <%= filters.sort === "clickCount" ? "selected" : "" %>>Click count</option>
+            <option value="title" <%= filters.sort === "title" ? "selected" : "" %>>Title</option>
+            <option value="expiresAt" <%= filters.sort === "expiresAt" ? "selected" : "" %>>Expiry date</option>
+          </select>
+          <select name="order" aria-label="Sort direction">
+            <option value="desc" <%= filters.order !== "asc" ? "selected" : "" %>>Descending</option>
+            <option value="asc" <%= filters.order === "asc" ? "selected" : "" %>>Ascending</option>
+          </select>
+          <select name="pageSize" aria-label="Results per page">
+            <option value="10" <%= !filters.pageSize || filters.pageSize === "10" ? "selected" : "" %>>10 per page</option>
+            <option value="20" <%= filters.pageSize === "20" ? "selected" : "" %>>20 per page</option>
+            <option value="50" <%= filters.pageSize === "50" ? "selected" : "" %>>50 per page</option>
+          </select>
+          <div class="filter-number">
+            <label for="clicks-above">Clicks &gt;</label>
+            <input id="clicks-above" name="clicksAbove" type="number" min="0" step="1" value="<%= filters.clicksAbove || '' %>" />
+          </div>
+          <div class="filter-number">
+            <label for="clicks-min">Clicks ≥</label>
+            <input id="clicks-min" name="clicksMin" type="number" min="0" step="1" value="<%= filters.clicksMin || '' %>" />
+          </div>
+          <div class="filter-number">
+            <label for="clicks-below">Clicks &lt;</label>
+            <input id="clicks-below" name="clicksBelow" type="number" min="0" step="1" value="<%= filters.clicksBelow || '' %>" />
+          </div>
+          <div class="filter-number">
+            <label for="clicks-max">Clicks ≤</label>
+            <input id="clicks-max" name="clicksMax" type="number" min="0" step="1" value="<%= filters.clicksMax || '' %>" />
+          </div>
+          <div class="filter-date">
+            <label for="created-after">Created on/after</label>
+            <input id="created-after" name="createdAfter" type="date" value="<%= filters.createdAfter || '' %>" />
+          </div>
+          <div class="filter-date">
+            <label for="expires-before">Expires by</label>
+            <input id="expires-before" name="expiresBefore" type="date" value="<%= filters.expiresBefore || '' %>" />
+          </div>
+          <button class="button button-primary filter-submit" type="submit">Apply filters</button>
+          <a class="clear-filters" href="/">Clear</a>
+        </form>
+
+        <% if (urls.length) { %>
+        <form id="bulk-links-form" class="bulk-actions" action="/url/bulk-status" method="post">
+          <label for="bulk-status">With selected:</label>
+          <select id="bulk-status" name="status" aria-label="Bulk status">
+            <option value="active">Activate</option>
+            <option value="archived">Archive</option>
+          </select>
+          <button class="button button-secondary" type="submit">Update status</button>
+          <input type="hidden" name="confirm" value="delete" />
+          <button class="button button-danger" type="submit" formaction="/url/bulk-delete" data-confirm="Delete all selected links? This cannot be undone.">Delete selected</button>
+          <span class="selection-hint">Select up to 100 links</span>
+        </form>
+        <div class="link-list">
+          <% urls.forEach((url) => { %>
+          <article class="link-card">
+            <input class="link-select" form="bulk-links-form" type="checkbox" name="ids" value="<%= url._id %>" aria-label="Select <%= url.title || url.shortId %>" />
+            <div class="link-symbol" aria-hidden="true">↗</div>
+            <div class="link-details">
+              <p class="link-title"><%= url.title || "Untitled link" %> <span class="status-badge status-<%= url.expiresAt && new Date(url.expiresAt) <= new Date() ? "expired" : (url.status || "active") %>"><%= url.expiresAt && new Date(url.expiresAt) <= new Date() ? "expired" : (url.status || "active") %></span></p>
+              <a class="short-link" href="/url/<%= encodeURIComponent(url.shortId) %>" target="_blank" rel="noopener noreferrer"><%= baseUrl %>/url/<%= url.shortId %></a>
+              <p class="destination" title="<%= url.redirectURL %>"><%= url.redirectURL %></p>
+              <% if (url.expiresAt) { %><p class="expiry-note">Expires <%= new Date(url.expiresAt).toLocaleDateString() %></p><% } %>
+            </div>
+            <div class="link-stats">
+              <strong><%= url.clickCount ?? 0 %></strong>
+              <span>clicks</span>
+              <span class="weighted-clicks">Weighted: <%= ((url.clickCount ?? 0) * (url.analyticsMultiplier ?? 1)).toFixed(1) %></span>
+            </div>
+            <button class="copy-button" type="button" data-copy="<%= baseUrl %>/url/<%= url.shortId %>" aria-label="Copy short link">Copy</button>
+            <details class="row-actions">
+              <summary>Manage</summary>
+              <form class="row-form" action="/url/<%= url._id %>/edit" method="post">
+                <label>Title<input name="title" maxlength="120" value="<%= url.title || '' %>" /></label>
+                <label>Destination URL<input name="url" type="url" required value="<%= url.redirectURL %>" /></label>
+                <label>Status
+                  <select name="status">
+                    <option value="active" <%= (url.status || "active") === "active" ? "selected" : "" %>>Active</option>
+                    <option value="archived" <%= url.status === "archived" ? "selected" : "" %>>Archived</option>
+                  </select>
+                </label>
+                <label>Expiry date<input name="expiresAt" type="date" value="<%= url.expiresAt ? new Date(url.expiresAt).toISOString().slice(0, 10) : '' %>" /></label>
+                <button class="button button-secondary" type="submit">Save changes</button>
+              </form>
+              <form class="delete-form" action="/url/<%= url._id %>/delete" method="post" data-confirm="Delete this shortened URL and its click history? This cannot be undone.">
+                <input type="hidden" name="confirm" value="delete" />
+                <button class="button button-danger" type="submit">Delete link</button>
+              </form>
+              <% if (admin) { %>
+              <details class="admin-row-actions">
+                <summary>Admin operations</summary>
+                <form class="row-form" action="/url/<%= url.shortId %>/replace" method="post" data-confirm="Replace the full URL record? The identifier and click history will be preserved.">
+                  <input type="hidden" name="confirm" value="replace" />
+                  <label>Replacement title<input name="title" maxlength="120" value="<%= url.title || '' %>" required /></label>
+                  <label>Replacement destination<input name="url" type="url" value="<%= url.redirectURL %>" required /></label>
+                  <label>Replacement status
+                    <select name="status">
+                      <option value="active" <%= (url.status || "active") === "active" ? "selected" : "" %>>Active</option>
+                      <option value="archived" <%= url.status === "archived" ? "selected" : "" %>>Archived</option>
+                    </select>
+                  </label>
+                  <label>Replacement expiry<input name="expiresAt" type="date" value="<%= url.expiresAt ? new Date(url.expiresAt).toISOString().slice(0, 10) : '' %>" /></label>
+                  <button class="button button-secondary" type="submit">Replace full record</button>
+                </form>
+                <form class="row-form" action="/url/<%= url.shortId %>/multiply" method="post" data-confirm="Multiply this record's analytics multiplier? Raw clicks and click history will not change.">
+                  <input type="hidden" name="confirm" value="multiply" />
+                  <label>Analytics multiplier (0.1–10)
+                    <input name="factor" type="number" min="0.1" max="10" step="0.1" value="1" required />
+                  </label>
+                  <button class="button button-secondary" type="submit">Apply multiplier</button>
+                </form>
+              </details>
+              <% } %>
+            </details>
+          </article>
+          <% }) %>
+        </div>
+        <nav class="pagination" aria-label="Link pages">
+          <span>Page <%= pagination.page %> of <%= pagination.totalPages %> · <%= pagination.totalResults %> result(s)</span>
+          <% if (pagination.previousUrl) { %><a class="button button-secondary" href="<%= pagination.previousUrl %>">Previous</a><% } %>
+          <% if (pagination.nextUrl) { %><a class="button button-secondary" href="<%= pagination.nextUrl %>">Next</a><% } %>
+        </nav>
+        <% } else { %>
+        <div class="empty-state">
+          <span class="empty-icon" aria-hidden="true">↗</span>
+          <h3>No matching links</h3>
+          <p>Create your first link above or adjust your search and filters.</p>
+        </div>
+        <% } %>
+      </section>
+
+      <% if (admin) { %>
+      <details class="admin-panel">
+        <summary>Administrative operations and audit log</summary>
+        <p>Advanced replace and analytics multiplier actions are restricted to the configured administrator account and links owned by that account. Multipliers affect weighted analytics only; actual clicks and visit history are never changed.</p>
+        <h3>Recent admin actions</h3>
+        <% if (auditEntries.length) { %>
+        <ul class="audit-list">
+          <% auditEntries.forEach((entry) => { %>
+          <li><strong><%= entry.action.replace("_", " ") %></strong> · <%= entry.shortId %> · <%= entry.outcome %><% if (entry.factor) { %> · ×<%= entry.factor %><% } %> · <%= new Date(entry.createdAt).toLocaleString() %></li>
+          <% }) %>
+        </ul>
+        <% } else { %>
+        <p class="form-hint">No administrative actions recorded yet.</p>
+        <% } %>
+      </details>
+      <% } %>
+    </main>
+
+    <footer class="footer">
+      <span>linklet</span>
+      <span>Simple links. Better sharing.</span>
+    </footer>
+  </body>
+</html>
